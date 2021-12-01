@@ -15,7 +15,7 @@ const routes = require('./routes/index');
 
 const {
   port = 3000,
-  dbUrl = 'mongodb://localhost:27017/filmsdb',
+  dbUrl = 'mongodb://localhost:27017/moviesdb',
 } = process.env;
 
 const app = express();
