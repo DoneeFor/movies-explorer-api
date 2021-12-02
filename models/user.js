@@ -42,9 +42,6 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(
             return Promise.reject(new Error('Неправильные почта или пароль'));
           }
           return user;
-        })
-        .catch((err) => {
-          console.log(err);
         });
     });
 };
