@@ -5,8 +5,9 @@ const ForbiddenError = require('../errors/forbiddenErr'); // 403
 const NotFoundError = require('../errors/notFoundError'); // 404
 
 module.exports.getMovie = (req, res, next) => {
-  Movie.find({})
-    .then((movies) => res.send(movies))
+  const owner = req.user._id;
+  Movie.find({ owner })
+    .then((movies) => res.status(200).send(movies))
     .catch(next);
 };
 
@@ -55,7 +56,7 @@ module.exports.removeMovie = (req, res, next) => {
       if (!movie) {
         throw new NotFoundError('Фильм не найден');
       }
-      if (movie.owner === req.user._id) {
+      if (movie.owner.toString() !== req.user._id) {
         return Movie.findByIdAndRemove(req.params.movieId)
           .then(() => res.send());
       }

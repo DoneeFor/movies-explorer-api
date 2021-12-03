@@ -7,6 +7,7 @@ const moviesRouter = require('./movies');
 const auth = require('../middlewares/auth');
 const { login, createUser, logout } = require('../controllers/users');
 const errorMessages = require('../errors/errorMessages');
+const NotFoundError = require('../errors/notFoundError');
 
 router.post('/signin', celebrate({
   body: Joi.object().keys({
@@ -41,7 +42,7 @@ router.use('/movies', moviesRouter);
 router.use((req, res, next) => {
   res.status(404);
   res.send({ error: 'Not found' });
-  return next();
+  return next(NotFoundError);
 });
 
 module.exports = router;
