@@ -42,7 +42,7 @@ router.use('/movies', moviesRouter);
 router.use((req, res, next) => {
   res.status(404);
   res.send({ error: 'Not found' });
-  return next(NotFoundError);
+  return next(new NotFoundError('Данной страницы не существует'));
 });
 
 module.exports = router;

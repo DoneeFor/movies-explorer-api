@@ -56,7 +56,7 @@ module.exports.removeMovie = (req, res, next) => {
       if (!movie) {
         throw new NotFoundError('Фильм не найден');
       }
-      if (movie.owner.toString() !== req.user._id) {
+      if (movie.owner.toString() === req.user._id) {
         return Movie.findByIdAndRemove(req.params.movieId)
           .then(() => res.send());
       }
