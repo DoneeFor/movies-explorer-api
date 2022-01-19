@@ -1,40 +1,58 @@
+require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
+
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
-const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const { errors } = require('celebrate');
-const routes = require('./routes');
+const cors = require('cors');
+const ErrorsAll = require('./middlewares/error');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
-const errorHandler = require('./middlewares/error-handler');
-const limiter = require('./middlewares/limiter');
-const { MONGO_URL } = require('./config');
-const NotFoundError = require('./errors/not-found-err');
+const limit = require('./utils/limiter');
+const routes = require('./routes/index');
+
+const {
+  port = 3000,
+  dbUrl = 'mongodb://localhost:27017/moviesdb',
+} = process.env;
 
 const app = express();
-const { PORT = 3000 } = process.env;
 
-mongoose.connect(MONGO_URL, {
-  useNewUrlParser: true,
-  useCreateIndex: true,
-  useFindAndModify: false,
-  useUnifiedTopology: true,
-});
-
-app.use(requestLogger);
-app.use(limiter);
-app.use(helmet());
-app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(routes);
-app.use(() => {
-  throw new NotFoundError('Ресурс не найден');
+
+app.use(requestLogger);
+
+mongoose.connect(
+  dbUrl,
+  {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  },
+).catch((err) => {
+  console.log(err);
 });
+
+app.use(cors({
+  origin: '*',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+}));
+
+app.use(helmet());
+app.use(requestLogger);
+app.use(limit);
+app.use(express.json());
+app.use(cookieParser());
+
+app.use(routes);
 app.use(errorLogger);
 app.use(errors());
-app.use(errorHandler);
+app.use(ErrorsAll);
 
-app.listen(PORT, () => {
-  console.log(`App listening ${PORT} port`);
+app.listen(port, () => {
+  console.log(`Сервер запущен на порту ${port}`);
 });
