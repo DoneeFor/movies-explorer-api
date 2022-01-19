@@ -1,16 +1,17 @@
 const Movie = require('../models/movie');
-const IncorrectDataError = require('../errors/incorrect-data-err');
-const NoRightsError = require('../errors/no-rights-err');
-const NotFoundError = require('../errors/not-found-err');
 
-module.exports.getMovies = (req, res, next) => {
-  Movie.find({})
-    .then((movies) => res.send(movies))
+const BadRequestError = require('../errors/badRequest'); // 400
+const ForbiddenError = require('../errors/forbiddenErr'); // 403
+const NotFoundError = require('../errors/notFoundError'); // 404
+
+module.exports.getMovie = (req, res, next) => {
+  const owner = req.user._id;
+  Movie.find({ owner })
+    .then((movies) => res.status(200).send(movies))
     .catch(next);
 };
 
-module.exports.addMovie = (req, res, next) => {
-  const owner = req.user._id;
+module.exports.createMovie = (req, res, next) => {
   const {
     country,
     director,
@@ -19,10 +20,10 @@ module.exports.addMovie = (req, res, next) => {
     description,
     image,
     trailer,
-    nameRU,
-    nameEN,
     thumbnail,
     movieId,
+    nameRU,
+    nameEN,
   } = req.body;
 
   Movie.create({
@@ -33,37 +34,39 @@ module.exports.addMovie = (req, res, next) => {
     description,
     image,
     trailer,
-    nameRU,
-    nameEN,
     thumbnail,
     movieId,
-    owner,
+    nameRU,
+    nameEN,
+    owner: req.user._id,
   })
-    .then((movie) => res.status(201).send(movie))
+    .then((movie) => res.send(movie))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new IncorrectDataError('Переданы некорректные данные при добавлении фильма'));
-      } else {
-        next(err);
+        throw new BadRequestError('Переданы некорректные данные при создании карточки.');
       }
-    });
+      next(err);
+    })
+    .catch(next);
 };
 
-module.exports.deleteMovie = (req, res, next) => {
-  Movie.findById(req.params._id)
-    .orFail(new NotFoundError('Фильм с указанным _id не найден'))
+module.exports.removeMovie = (req, res, next) => {
+  Movie.findById(req.params.movieId)
     .then((movie) => {
-      if (req.user._id.toString() === movie.owner.toString()) {
-        return movie.remove()
-          .then(() => res.send(movie));
+      if (!movie) {
+        throw new NotFoundError('Фильм не найден');
       }
-      return next(new NoRightsError('Нельзя удалять чужие фильмы'));
+      if (movie.owner.toString() === req.user._id) {
+        return Movie.findByIdAndRemove(req.params.movieId)
+          .then(() => res.send());
+      }
+      throw new ForbiddenError('Недостаточно прав для удаления карточки.');
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new IncorrectDataError('Некорректный формат _id фильма'));
-      } else {
-        next(err);
+        throw new BadRequestError('Переданы некорректные данные.');
       }
-    });
+      next(err);
+    })
+    .catch(next);
 };
