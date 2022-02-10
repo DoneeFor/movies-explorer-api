@@ -35,13 +35,7 @@ mongoose.connect(
   console.log(err);
 });
 
-app.use(cors({
-  origin: '*',
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
-}));
-
+app.use(cors());
 app.use(helmet());
 app.use(requestLogger);
 app.use(limit);
