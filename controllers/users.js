@@ -43,22 +43,11 @@ module.exports.login = (req, res, next) => {
         NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
         { expiresIn: '7d' },
       );
-      res
-        .cookie('jwt', token, {
-          httpOnly: true,
-        })
-        .send({ token });
+      res.send({ token });
     })
     .catch((err) => {
       next(new UnauthorizedError(`Произошла ошибка: ${err.message}`));
     });
-};
-
-module.exports.logout = (req, res) => {
-  res.clearCookie('jwt', {
-    httpOnly: true,
-  });
-  throw new UnauthorizedError('Необходима авторизация');
 };
 
 module.exports.getUser = (req, res, next) => {
