@@ -41,7 +41,6 @@ app.use(cors({
   preflightContinue: false,
   optionsSuccessStatus: 204,
 }));
-
 app.use(helmet());
 app.use(requestLogger);
 app.use(limit);
